@@ -19,7 +19,7 @@ This enables Boto API auth in Developer Shell environment.
 
 from __future__ import absolute_import
 
-import oauth2client.devshell as devshell
+import oauth2client.contrib.devshell as devshell
 from boto.auth_handler import AuthHandler
 from boto.auth_handler import NotReadyToAuthenticate
 
