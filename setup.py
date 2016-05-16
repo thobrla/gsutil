@@ -40,7 +40,7 @@ requires = [
     'gcs-oauth2-boto-plugin>=1.12',
     'google-apitools==0.5.2',
     'httplib2>=0.8',
-    'oauth2client==1.5.2',
+    'oauth2client==2.0.2',
     'pyOpenSSL>=0.13',
     'python-gflags>=2.0',
     'retry_decorator>=1.0.0',
