@@ -39,7 +39,6 @@ from oauth2client.contrib import devshell
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-
 DEFAULT_GOOGLE_OAUTH2_PROVIDER_AUTHORIZATION_URI = (
     'https://accounts.google.com/o/oauth2/auth')
 DEFAULT_GOOGLE_OAUTH2_PROVIDER_TOKEN_URI = (
@@ -163,17 +162,11 @@ def _HasGceCreds():
   return config.has_option('GoogleCompute', 'service_account')
 
 
-
 def _GetOauth2ServiceAccountCredentials():
+  """Retrieves OAuth2 service account credentials for a private key file."""
   if not _HasOauth2ServiceAccountCreds():
     return
 
-  # TODO(thobrla): plumb these through from_json_keyfile_dict and
-  # _from_p12_keyfile_contents when oauth2client releases a version that
-  # supports them
-  provider_authorization_uri = config.get(
-      'OAuth2', 'provider_authorization_uri',
-      DEFAULT_GOOGLE_OAUTH2_PROVIDER_AUTHORIZATION_URI)
   provider_token_uri = config.get(
       'OAuth2', 'provider_token_uri', DEFAULT_GOOGLE_OAUTH2_PROVIDER_TOKEN_URI)
 
@@ -195,26 +188,31 @@ def _GetOauth2ServiceAccountCredentials():
       if json_entry not in json_key_dict:
         raise Exception('The JSON private key file at %s '
                         'did not contain the required entry: %s' %
-                        (private_key_filename, json_entry))    
+                        (private_key_filename, json_entry))
     return ServiceAccountCredentials.from_json_keyfile_dict(
-        json_key_dict, scopes=DEFAULT_SCOPES)
+        json_key_dict, scopes=DEFAULT_SCOPES, token_uri=provider_token_uri)
   else:
     # Key file is in P12 format.
     if HAS_CRYPTO:
+      if not service_client_id:
+        raise Exception('gs_service_client_id must be set if '
+                        'gs_service_key_file is set to a .p12 key file')
       key_file_pass = config.get(
           'Credentials', 'gs_service_key_file_password',
           GOOGLE_OAUTH2_DEFAULT_FILE_PASSWORD)
       # We use _from_p12_keyfile_contents to avoid reading the key file
       # again unnecessarily.
-      return ServiceAccountCredentials._from_p12_keyfile_contents(
+      return ServiceAccountCredentials.from_p12_keyfile_contents(
           service_client_id, private_key,
-          private_key_password=key_file_pass, scopes=DEFAULT_SCOPES)
+          private_key_password=key_file_pass, scopes=DEFAULT_SCOPES,
+          token_uri=provider_token_uri)
 
 
 def _GetOauth2UserAccountCredentials():
+  """Retrieves OAuth2 service account credentials for a refresh token."""
   if not _HasOauth2UserAccountCreds():
     return
-  
+
   provider_token_uri = config.get(
       'OAuth2', 'provider_token_uri', DEFAULT_GOOGLE_OAUTH2_PROVIDER_TOKEN_URI)
   gsutil_client_id, gsutil_client_secret = GetGsutilClientIdAndSecret()
@@ -226,7 +224,7 @@ def _GetOauth2UserAccountCredentials():
   return oauth2client.client.OAuth2Credentials(
       None, client_id, client_secret,
       config.get('Credentials', 'gs_oauth2_refresh_token'), None,
-      provider_token_uri, None)    
+      provider_token_uri, None)
 
 
 def _GetGceCreds():
