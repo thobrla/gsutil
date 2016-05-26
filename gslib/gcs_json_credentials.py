@@ -38,6 +38,8 @@ from oauth2client.client import HAS_CRYPTO
 from oauth2client.contrib import devshell
 from oauth2client.service_account import ServiceAccountCredentials
 
+from six import BytesIO
+
 
 DEFAULT_GOOGLE_OAUTH2_PROVIDER_AUTHORIZATION_URI = (
     'https://accounts.google.com/o/oauth2/auth')
@@ -202,8 +204,8 @@ def _GetOauth2ServiceAccountCredentials():
           GOOGLE_OAUTH2_DEFAULT_FILE_PASSWORD)
       # We use _from_p12_keyfile_contents to avoid reading the key file
       # again unnecessarily.
-      return ServiceAccountCredentials.from_p12_keyfile_contents(
-          service_client_id, private_key,
+      return ServiceAccountCredentials.from_p12_keyfile_buffer(
+          service_client_id, BytesIO(private_key),
           private_key_password=key_file_pass, scopes=DEFAULT_SCOPES,
           token_uri=provider_token_uri)
 
